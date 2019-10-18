@@ -6,10 +6,10 @@ let completeSegments = [];
 let zoom, max, x0, y0, res;
 
 let nodes = ['localhost:8081'];
-let nodeThreads = 4;
+let nodeThreads = 6;
 let segmentQueue = [];
 
-let keydown = false, hud = false;
+let keydown = false, hud = false, mode = 1;
 
 function pageLoad() {
 
@@ -18,6 +18,7 @@ function pageLoad() {
     zoom = Number(localStorage.getItem("zoom"));
     max = Number(localStorage.getItem("max"));
     res = Number(localStorage.getItem("res"));
+    mode = Number(localStorage.getItem("mode"));
 
     const canvas = document.getElementById('fractalCanvas');
     canvas.width = w;
@@ -41,13 +42,47 @@ function processKey(event) {
 
     if (!keydown) {
 
+        if (event.key === "1") {
+            mode = 1;
+            requestFractal();
+        }
+        if (event.key === "2") {
+            mode = 2;
+            requestFractal();
+        }
+        if (event.key === "3") {
+            mode = 3;
+            requestFractal();
+        }
+        if (event.key === "4") {
+            mode = 4;
+            requestFractal();
+        }
+        if (event.key === "5") {
+            mode = 5;
+            requestFractal();
+        }
+        if (event.key === "6") {
+            mode = 6;
+            requestFractal();
+        }
+        if (event.key === "9") {
+            mode = 9;
+            requestFractal();
+        }
+        if (event.key === "0") {
+            mode = 0;
+            requestFractal();
+        }
+
+
         if (event.key === "ArrowDown") {
             max = Math.floor(max / 1.5);
             if (max < 1) max = 1;
             requestFractal();
         }
         if (event.key === "ArrowUp") {
-            max = Math.floor( max * 1.5);
+            max = Math.floor(max * 1.5);
             requestFractal();
         }
 
@@ -84,16 +119,18 @@ function processKey(event) {
         keydown = true;
 
     }
+
 }
 
 
 function requestFractal() {
 
-    if (isNaN(x0) || x0 ==="NaN" || x0 === "Infinity" || x0 === "-Infinity") x0 = 0;
-    if (isNaN(y0) || y0 === "NaN" || y0 === "Infinity" || y0 === "-Infinity") y0 = 0;
-    if (isNaN(zoom) || zoom === "NaN" || zoom === "Infinity" || zoom === "-Infinity") zoom = 1000;
-    if (isNaN(max) || max === "NaN" || max === "Infinity" || max === "-Infinity") max = 1000;
-    if (isNaN(res || res === "NaN" || res === "Infinity" || res === "-Infinity")) res = 1;
+    if (isNaN(x0) || x0 =="NaN" || x0 == "Infinity" || x0 == "-Infinity") x0 = 0;
+    if (isNaN(y0) || y0 == "NaN" || y0 == "Infinity" || y0 === "-Infinity") y0 = 0;
+    if (isNaN(zoom) || zoom == "NaN" || zoom == "Infinity" || zoom == "-Infinity") zoom = 1000;
+    if (isNaN(max) || max == "NaN" || max == "Infinity" || max == "-Infinity") max = 1000;
+    if (isNaN(res || res == "NaN" || res == "Infinity" || res == "-Infinity")) res = 1;
+    if (isNaN(mode || mode == "NaN" || mode == "Infinity" || mode == "-Infinity")) mode = 1;
 
     localStorage.setItem("x0", x0);
     localStorage.setItem("y0", y0);
@@ -124,6 +161,7 @@ function requestFractal() {
                     `&w=${xStep / zoom}` +
                     `&h=${yStep / zoom}` +
                     `&res=${res}` +
+                    `&mode=${mode}` +
                     `&max=${Math.floor(max)}`,
                 image: new Image()
             };

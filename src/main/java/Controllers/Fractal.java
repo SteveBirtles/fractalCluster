@@ -12,30 +12,50 @@ import java.io.IOException;
 @Path("fractal/")
 public class Fractal {
 
-    public int intColor(int red, int green, int blue) {
-        return (red << 16) | (green << 8) | blue;
+    public int intColor(int red, int green, int blue, int mode) {
+        switch (mode) {
+            case 1:
+                return (red << 16) | (green << 8) | blue;
+            case 2:
+                return (red << 16) | (blue << 8) | green;
+            case 3:
+                return (green << 16) | (red << 8) | blue;
+            case 4:
+                return (green << 16) | (blue << 8) | red;
+            case 5:
+                return (blue << 16) | (red << 8) | green;
+            case 6:
+                return (blue << 16) | (green << 8) | red;
+        }
+        return 0;
     }
 
-    public int getColor(double value) {
-        if (value < 1) {
-
-            return intColor((int) (256 * value), 0, 255);
-        } else if (value < 2) {
-            value -= 1;
-            return intColor(255, (int) (255 * value), (int) (255 * (1 - value)));
-        } else if (value < 3) {
-            value -= 2;
-            return intColor((int) (255 * (1 - value)), 255, 0);
-        } else if (value < 4) {
-            value -= 3;
-            return intColor(0, 255, (int) (255 * value));
-        } else if (value < 5) {
-            value -= 4;
-            return intColor(0, (int) (255 * (1 - value)), 255);
-        } else {
-            value -= 5;
-            return intColor(0, 0, (int) (255 * (1 - value)));
+    public int getColor(double value, int mode) {
+        if (mode == 0) {
+            return ((int) (255 * value) << 16) | ((int) (255 * value) << 8) | (int) (255 * value);
+        } else if (mode < 7) {
+            if (value < 1) {
+                return intColor((int) (256 * value), 0, 255, mode);
+            } else if (value < 2) {
+                value -= 1;
+                return intColor(255, (int) (255 * value), (int) (255 * (1 - value)), mode);
+            } else if (value < 3) {
+                value -= 2;
+                return intColor((int) (255 * (1 - value)), 255, 0, mode);
+            } else if (value < 4) {
+                value -= 3;
+                return intColor(0, 255, (int) (255 * value), mode);
+            } else if (value < 5) {
+                value -= 4;
+                return intColor(0, (int) (255 * (1 - value)), 255, mode);
+            } else {
+                value -= 5;
+                return intColor(0, 0, (int) (255 * (1 - value)), mode);
+            }
         }
+
+        return ( (int) (255 * (1 - value)) << 16) | ( (int) (255 * (1 - value)) << 8) |  (int) (255 * (1 - value));
+
     }
 
     @GET
@@ -48,6 +68,7 @@ public class Fractal {
                                   @QueryParam("xStep") Integer xStep,
                                   @QueryParam("yStep") Integer yStep,
                                   @QueryParam("max") Integer maxDepth,
+                                  @QueryParam("mode") Integer mode,
                                   @QueryParam("res") Integer res) {
 
         if (x == null) x = -1.0;
@@ -56,6 +77,7 @@ public class Fractal {
         if (h == null) h = 2.0;
         if (xStep == null) xStep = 128;
         if (yStep == null) yStep = 120;
+        if (mode == null) mode = 1;
         if (maxDepth == null) maxDepth = 300;
         if (res == null) res = 1;
 
@@ -87,7 +109,7 @@ public class Fractal {
 
                 for (int p = i; p < i+res; p++) {
                     for (int q = j; q < j+res; q++) {
-                        fractalBuffer.setRGB(p, q, getColor(6 * Math.abs((double) depth / (double) maxDepth)));
+                        fractalBuffer.setRGB(p, q, getColor(6 * Math.abs((double) depth / (double) maxDepth), mode));
                     }
                 }
 

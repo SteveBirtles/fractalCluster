@@ -1,7 +1,15 @@
+"use strict";
+
 const w = 1920, h = 1080;
-const step = 160;
-let segments = [];
-let zoom, max, x0, y0;
+const xStep = 128, yStep = 120;
+let completeSegments = [];
+let zoom, max, x0, y0, res;
+
+let nodes = ['localhost:8081'];
+let nodeThreads = 4;
+let segmentQueue = [];
+
+let keydown = false, hud = false;
 
 function pageLoad() {
 
@@ -9,74 +17,148 @@ function pageLoad() {
     y0 = Number(localStorage.getItem("y0"));
     zoom = Number(localStorage.getItem("zoom"));
     max = Number(localStorage.getItem("max"));
-
-    if (isNaN(x0)) x0 = 0;
-    if (isNaN(y0)) y0 = 0;
-    if (isNaN(zoom)) zoom = 1000;
-    if (isNaN(max)) max = 1000;
+    res = Number(localStorage.getItem("res"));
 
     const canvas = document.getElementById('fractalCanvas');
     canvas.width = w;
     canvas.height = h;
 
     canvas.addEventListener('click', event => {
-        x0 = x0 + (event.clientX-w/2)/zoom;
-        y0 = y0 + (event.clientY-h/2)/zoom;
+        x0 = x0 + (event.clientX - w / 2) / zoom;
+        y0 = y0 + (event.clientY - h / 2) / zoom;
         zoom *= 2;
         requestFractal();
     }, false);
 
     window.addEventListener("keydown", processKey);
+    window.addEventListener("keyup", () => {keydown = false;});
 
     requestFractal();
 }
 
+
 function processKey(event) {
 
-    if (event.key === "ArrowDown") {
-        max = max / 1.5;
-        if (max < 1) max = 1;
-        requestFractal();
-    }
-    if (event.key === "ArrowUp") {
-        max = max * 1.5;
-        requestFractal();
-    }
-    if (event.key === "Backspace") {
-        zoom /= 2;
-        requestFractal();
-    }
-    if (event.key === "Home") {
-        x0 = 0;
-        y0 = 0;
-        zoom = 1000;
-        max = 1000;
-        requestFractal();
+    if (!keydown) {
+
+        if (event.key === "ArrowDown") {
+            max = Math.floor(max / 1.5);
+            if (max < 1) max = 1;
+            requestFractal();
+        }
+        if (event.key === "ArrowUp") {
+            max = Math.floor( max * 1.5);
+            requestFractal();
+        }
+
+        if (event.key === "ArrowRight") {
+            res *= 2;
+            if (res > 8) res = 8;
+            requestFractal();
+        }
+        if (event.key === "ArrowLeft") {
+            res /= 2;
+            if (res < 1) res = 1;
+            requestFractal();
+        }
+
+        if (event.key === "Backspace") {
+            zoom /= 2;
+            requestFractal();
+        }
+
+        if (event.key === "Home") {
+            x0 = 0;
+            y0 = 0;
+            zoom = 1000;
+            max = 1000;
+            res = 1;
+            requestFractal();
+        }
+
+        if (event.key === "Enter") {
+            hud = !hud;
+            redraw();
+        }
+
+        keydown = true;
+
     }
 }
 
 
 function requestFractal() {
 
+    if (isNaN(x0) || x0 ==="NaN" || x0 === "Infinity" || x0 === "-Infinity") x0 = 0;
+    if (isNaN(y0) || y0 === "NaN" || y0 === "Infinity" || y0 === "-Infinity") y0 = 0;
+    if (isNaN(zoom) || zoom === "NaN" || zoom === "Infinity" || zoom === "-Infinity") zoom = 1000;
+    if (isNaN(max) || max === "NaN" || max === "Infinity" || max === "-Infinity") max = 1000;
+    if (isNaN(res || res === "NaN" || res === "Infinity" || res === "-Infinity")) res = 1;
+
     localStorage.setItem("x0", x0);
     localStorage.setItem("y0", y0);
     localStorage.setItem("zoom", zoom);
     localStorage.setItem("max", max);
+    localStorage.setItem("res", res);
 
-    segments = [];
-    for (let j = 0; j < h; j += step) {
-        let row = [];
-        for (let i = 0; i < w; i += step) {
-            let x = x0 + (i-w/2)/zoom;
-            let y = y0 + (j-h/2)/zoom;
-            let size = step/zoom;
-            let image = new Image();
-            image.src = `/fractal/generate?x=${x}&y=${y}&w=${size}&h=${size}&max=${Math.floor(max)}`;
-            image.onload = () => redraw();
-            row.push(image);
-        }
-        segments.push(row);
+    completeSegments = [];
+
+    segmentQueue = [];
+    for (let t = 0; t < nodes.length; t++) {
+        segmentQueue.push([]);
     }
+
+    let n = 0;
+
+    for (let j = 0; j < h; j += yStep) {
+        for (let i = 0; i < w; i += xStep) {
+
+            let x = x0 + (i - w / 2) / zoom;
+            let y = y0 + (j - h / 2) / zoom;
+
+            let segment = {
+                x: i,
+                y: j,
+                request: `/fractal/generate?x=${x}` +
+                    `&y=${y}` +
+                    `&w=${xStep / zoom}` +
+                    `&h=${yStep / zoom}` +
+                    `&res=${res}` +
+                    `&max=${Math.floor(max)}`,
+                image: new Image()
+            };
+
+            segmentQueue[n].push(segment);
+
+            n = (n + 1) % nodes.length;
+
+        }
+    }
+
+    for (let n = 0; n < nodes.length; n++) {
+        for (let t = 0; t < nodeThreads; t++) {
+            makeRequest(segmentQueue[n].pop(), n);
+        }
+    }
+
+}
+
+function makeRequest(segment, n) {
+
+    segment.image.src = segment.request;
+    segment.image.onload = () => {
+        completeSegments.push(segment);
+        redraw();
+        nextRequest(n);
+    };
+
+}
+
+function nextRequest(n) {
+
+    if (segmentQueue[n].length === 0) return;
+
+    makeRequest(segmentQueue[n].pop(), n);
 
 }
 
@@ -85,16 +167,19 @@ function redraw() {
     const canvas = document.getElementById('fractalCanvas');
     const context = canvas.getContext('2d');
 
-    let y = 0;
-    for (let row of segments) {
-        let x = 0;
-        for (let image of row) {
-            context.drawImage(image, x, y);
-            x += 160;
-        }
-        y += 160;
+    for (let s of completeSegments) {
+        context.drawImage(s.image, s.x, s.y);
     }
 
+    if (hud) {
+        context.fillStyle = 'black';
+        context.fillRect(0, h - 200, w, 50);
+        context.font = "24px Arial";
+        context.fillStyle = 'white';
+        context.textBaseline = 'middle';
+        context.textAlign = 'center';
+        context.fillText("x = " + x0 + ", y = " + y0 + ", z = " + zoom + ", d = " + max + ", r = " + res, w / 2, h - 175);
+    }
 
 }
 

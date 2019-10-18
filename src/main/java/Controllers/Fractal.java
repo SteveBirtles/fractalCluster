@@ -45,15 +45,19 @@ public class Fractal {
                                   @QueryParam("y") Double y,
                                   @QueryParam("w") Double w,
                                   @QueryParam("h") Double h,
-                                  @QueryParam("size") Integer segmentSize,
-                                  @QueryParam("max") Integer maxDepth) {
+                                  @QueryParam("xStep") Integer xStep,
+                                  @QueryParam("yStep") Integer yStep,
+                                  @QueryParam("max") Integer maxDepth,
+                                  @QueryParam("res") Integer res) {
 
         if (x == null) x = -1.0;
         if (y == null) y = -1.0;
         if (w == null) w = 2.0;
         if (h == null) h = 2.0;
-        if (segmentSize == null) segmentSize = 160;
+        if (xStep == null) xStep = 128;
+        if (yStep == null) yStep = 120;
         if (maxDepth == null) maxDepth = 300;
+        if (res == null) res = 1;
 
         System.out.println("Generating fractal segment: " +
                 "x=" + x + ", " +
@@ -61,14 +65,15 @@ public class Fractal {
                 "w=" + w + ", " +
                 "h=" + h + ", " +
                 "depth=" + maxDepth + ", " +
-                "size=" + segmentSize);
+                "xStep=" + xStep + ", " +
+                "yStep=" + yStep);
 
-        BufferedImage fractalBuffer = new BufferedImage(segmentSize, segmentSize, BufferedImage.TYPE_INT_RGB);
+        BufferedImage fractalBuffer = new BufferedImage(xStep, yStep, BufferedImage.TYPE_INT_RGB);
 
-        for (int i = 0; i < segmentSize; i++) {
-            for (int j = 0; j < segmentSize; j++) {
+        for (int i = 0; i < xStep; i += res) {
+            for (int j = 0; j < yStep; j += res) {
 
-                Complex c = new Complex(x + ((double) i / segmentSize) * w, y + ((double) j / segmentSize) * h);
+                Complex c = new Complex(x + ((double) i / xStep) * w, y + ((double) j / yStep) * h);
 
                 int depth = 0;
                 boolean infinite = false;
@@ -80,7 +85,11 @@ public class Fractal {
                     depth++;
                 }
 
-                fractalBuffer.setRGB(i,j,getColor(6 * Math.abs((double) depth / (double) maxDepth)));
+                for (int p = i; p < i+res; p++) {
+                    for (int q = j; q < j+res; q++) {
+                        fractalBuffer.setRGB(p, q, getColor(6 * Math.abs((double) depth / (double) maxDepth)));
+                    }
+                }
 
             }
         }

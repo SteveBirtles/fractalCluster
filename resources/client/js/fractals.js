@@ -66,6 +66,14 @@ function processKey(event) {
             mode = 6;
             requestFractal();
         }
+        if (event.key === "7") {
+            mode = 7;
+            requestFractal();
+        }
+        if (event.key === "8") {
+            mode = 8;
+            requestFractal();
+        }
         if (event.key === "9") {
             mode = 9;
             requestFractal();
@@ -108,6 +116,7 @@ function processKey(event) {
             zoom = 1000;
             max = 1000;
             res = 1;
+            mode = 1;
             requestFractal();
         }
 
@@ -129,14 +138,15 @@ function requestFractal() {
     if (isNaN(y0) || y0 == "NaN" || y0 == "Infinity" || y0 === "-Infinity") y0 = 0;
     if (isNaN(zoom) || zoom == "NaN" || zoom == "Infinity" || zoom == "-Infinity") zoom = 1000;
     if (isNaN(max) || max == "NaN" || max == "Infinity" || max == "-Infinity") max = 1000;
-    if (isNaN(res || res == "NaN" || res == "Infinity" || res == "-Infinity")) res = 1;
-    if (isNaN(mode || mode == "NaN" || mode == "Infinity" || mode == "-Infinity")) mode = 1;
+    if (isNaN(res) || res == "NaN" || res == "Infinity" || res == "-Infinity" || res < 1) res = 1;
+    if (isNaN(mode) || mode == "NaN" || mode == "Infinity" || mode == "-Infinity") mode = 1;
 
     localStorage.setItem("x0", x0);
     localStorage.setItem("y0", y0);
     localStorage.setItem("zoom", zoom);
     localStorage.setItem("max", max);
     localStorage.setItem("res", res);
+    localStorage.setItem("mode", mode);
 
     completeSegments = [];
 
@@ -216,7 +226,7 @@ function redraw() {
         context.fillStyle = 'white';
         context.textBaseline = 'middle';
         context.textAlign = 'center';
-        context.fillText("x = " + x0 + ", y = " + y0 + ", z = " + zoom + ", d = " + max + ", r = " + res, w / 2, h - 175);
+        context.fillText("x = " + x0 + ", y = " + y0 + ", z = " + zoom + ", d = " + max + ", r = " + res + ", m = " + mode, w / 2, h - 175);
     }
 
 }

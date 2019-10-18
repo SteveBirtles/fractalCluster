@@ -32,7 +32,27 @@ public class Fractal {
 
     public int getColor(double value, int mode) {
         if (mode == 0) {
+            value /= 6;
             return ((int) (255 * value) << 16) | ((int) (255 * value) << 8) | (int) (255 * value);
+        } else if (mode == 9) {
+            value /= 6;
+            return ((int) (255 * (1 - value)) << 16) | ((int) (255 * (1 - value)) << 8) | (int) (255 * (1 - value));
+        } else if (mode == 8) {
+            value /= 3;
+            if (value < 1) {
+                return ((int) (255 * value)) << 8 | 255;
+            } else if (value < 2) {
+                value -= 1;
+                return ((int) (255 * (1 - value))) << 8 | ((int) (255 * (1 - value)));
+            }
+        } else if (mode == 7) {
+            value /= 3;
+            if (value < 1) {
+                return 255 << 16 | ((int) (255 * value)) << 8;
+            } else if (value < 2) {
+                value -= 1;
+                return ((int) (255 * (1 - value))) << 16 | ((int) (255 * (1 - value))) << 8;
+            }
         } else if (mode < 7) {
             if (value < 1) {
                 return intColor((int) (256 * value), 0, 255, mode);
@@ -53,9 +73,7 @@ public class Fractal {
                 return intColor(0, 0, (int) (255 * (1 - value)), mode);
             }
         }
-
-        return ( (int) (255 * (1 - value)) << 16) | ( (int) (255 * (1 - value)) << 8) |  (int) (255 * (1 - value));
-
+        return 0;
     }
 
     @GET
@@ -88,7 +106,8 @@ public class Fractal {
                 "h=" + h + ", " +
                 "depth=" + maxDepth + ", " +
                 "xStep=" + xStep + ", " +
-                "yStep=" + yStep);
+                "yStep=" + yStep + ", " +
+                "mode=" + mode);
 
         BufferedImage fractalBuffer = new BufferedImage(xStep, yStep, BufferedImage.TYPE_INT_RGB);
 

@@ -26,6 +26,14 @@ class Complex {
         return this;
     }
 
+    Complex power(int n) {
+        double rToTheN = Math.pow(Math.pow(r, 2) + Math.pow(i, 2), n/2);
+        double theta = Math.atan2(i, r);
+        r = rToTheN*Math.cos(n*theta);
+        i = rToTheN*Math.sin(n*theta);
+        return this;
+    }
+
     Complex plus(Complex c) {
         r += c.getReal();
         i += c.getImaginary();

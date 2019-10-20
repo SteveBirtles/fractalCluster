@@ -87,6 +87,10 @@ public class Fractal {
                                   @QueryParam("yStep") Integer yStep,
                                   @QueryParam("max") Integer maxDepth,
                                   @QueryParam("mode") Integer mode,
+                                  @QueryParam("power") Integer power,
+                                  @QueryParam("julia") Boolean julia,
+                                  @QueryParam("xj") Double xj,
+                                  @QueryParam("yj") Double yj,
                                   @QueryParam("res") Integer res) {
 
         if (x == null) x = -1.0;
@@ -96,8 +100,12 @@ public class Fractal {
         if (xStep == null) xStep = 128;
         if (yStep == null) yStep = 120;
         if (mode == null) mode = 1;
+        if (power == null || power < 2) power = 2;
         if (maxDepth == null) maxDepth = 300;
         if (res == null) res = 1;
+        if (julia == null) julia = false;
+
+        if (julia && (xj == null || yj == null)) julia = false;
 
         System.out.println("Generating fractal segment: " +
                 "x=" + x + ", " +
@@ -107,6 +115,10 @@ public class Fractal {
                 "depth=" + maxDepth + ", " +
                 "xStep=" + xStep + ", " +
                 "yStep=" + yStep + ", " +
+                "power=" + power + ", " +
+                "julia=" + julia + ", " +
+                "xj=" + xj + ", " +
+                "yj=" + yj + ", " +
                 "mode=" + mode);
 
         BufferedImage fractalBuffer = new BufferedImage(xStep, yStep, BufferedImage.TYPE_INT_RGB);
@@ -114,15 +126,26 @@ public class Fractal {
         for (int i = 0; i < xStep; i += res) {
             for (int j = 0; j < yStep; j += res) {
 
-                Complex c = new Complex(x + ((double) i / xStep) * w, y + ((double) j / yStep) * h);
-
                 int depth = 0;
                 boolean infinite = false;
-                Complex z = new Complex(0, 0);
+
+                Complex c, z;
+
+                if (julia) {
+                    c = new Complex(xj, yj);
+                    z = new Complex(x + ((double) i / xStep) * w, y + ((double) j / yStep) * h);
+                } else {
+                    c = new Complex(x + ((double) i / xStep) * w, y + ((double) j / yStep) * h);
+                    z = new Complex(0, 0);
+                }
 
                 while (!infinite && depth < maxDepth) {
                     infinite = z.getReal() > 100000000 || z.getImaginary() > 100000000;
-                    z = (z.square()).plus(c);
+                    if (power == 2) {
+                        z = (z.square()).plus(c);
+                    } else {
+                        z = (z.power(power)).plus(c);
+                    }
                     depth++;
                 }
 

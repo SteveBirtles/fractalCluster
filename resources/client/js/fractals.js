@@ -3,7 +3,7 @@
 const w = 1920, h = 1080;
 const xStep = 128, yStep = 120;
 let completeSegments = [];
-let zoom, max, x0, y0, res;
+let zoom, max, x0, y0, xj, yj, lastXj, lastYj, res, power, julia = false;
 
 let nodes = ['localhost:8081'];
 let nodeThreads = 6;
@@ -15,10 +15,16 @@ function pageLoad() {
 
     x0 = Number(localStorage.getItem("x0"));
     y0 = Number(localStorage.getItem("y0"));
+    xj = Number(localStorage.getItem("xj"));
+    yj = Number(localStorage.getItem("yj"));
+    lastXj = Number(localStorage.getItem("lastXj"));
+    lastYj = Number(localStorage.getItem("lastYj"));
     zoom = Number(localStorage.getItem("zoom"));
     max = Number(localStorage.getItem("max"));
     res = Number(localStorage.getItem("res"));
     mode = Number(localStorage.getItem("mode"));
+    power = Number(localStorage.getItem("power"));
+    julia = Number(localStorage.getItem("julia"));
 
     const canvas = document.getElementById('fractalCanvas');
     canvas.width = w;
@@ -27,7 +33,6 @@ function pageLoad() {
     canvas.addEventListener('click', event => {
         x0 = x0 + (event.clientX - w / 2) / zoom;
         y0 = y0 + (event.clientY - h / 2) / zoom;
-        zoom *= 2;
         requestFractal();
     }, false);
 
@@ -83,46 +88,81 @@ function processKey(event) {
             requestFractal();
         }
 
+        if (event.key === "-") {
+            power--;
+            if (power < 2) power = 2;
+            requestFractal();
+        }
+        if (event.key === "=") {
+            power++;
+            requestFractal();
+        }
 
-        if (event.key === "ArrowDown") {
+        if (event.key === "ArrowLeft") {
             max = Math.floor(max / 1.5);
             if (max < 1) max = 1;
             requestFractal();
         }
-        if (event.key === "ArrowUp") {
+        if (event.key === "ArrowRight") {
             max = Math.floor(max * 1.5);
             requestFractal();
         }
 
-        if (event.key === "ArrowRight") {
+        if (event.key === "PageUp") {
             res *= 2;
             if (res > 8) res = 8;
             requestFractal();
         }
-        if (event.key === "ArrowLeft") {
+        if (event.key === "PageDown") {
             res /= 2;
             if (res < 1) res = 1;
             requestFractal();
         }
 
-        if (event.key === "Backspace") {
+        if (event.key === "ArrowUp") {
+            zoom *= 2;
+            requestFractal();
+        }
+
+        if (event.key === "ArrowDown") {
             zoom /= 2;
             requestFractal();
         }
 
+        if (event.key === "j") {
+            julia = !julia;
+            if (julia) {
+                xj = x0;
+                yj = y0;
+                x0 = lastXj;
+                y0 = lastYj;
+            } else {
+                lastXj = x0;
+                lastYj = y0;
+                x0 = xj;
+                y0 = yj;
+            }
+            requestFractal();
+        }
+
         if (event.key === "Home") {
-            x0 = 0;
+            x0 = -0.5;
             y0 = 0;
-            zoom = 1000;
+            zoom = 750;
             max = 1000;
             res = 1;
             mode = 1;
+            power = 2;
+            julia = false;
+            xj = 0;
+            yj = 0;
+            lastXj = 0;
+            lastYj = 0;
             requestFractal();
         }
 
         if (event.key === "Enter") {
             hud = !hud;
-            redraw();
         }
 
         keydown = true;
@@ -136,24 +176,35 @@ function requestFractal() {
 
     if (isNaN(x0) || x0 =="NaN" || x0 == "Infinity" || x0 == "-Infinity") x0 = 0;
     if (isNaN(y0) || y0 == "NaN" || y0 == "Infinity" || y0 === "-Infinity") y0 = 0;
+    if (isNaN(xj) || xj =="NaN" || xj == "Infinity" || xj == "-Infinity") xj = 0;
+    if (isNaN(yj) || yj == "NaN" || yj == "Infinity" || yj === "-Infinity") yj = 0;
+    if (isNaN(lastXj) || lastXj =="NaN" || lastXj == "Infinity" || lastXj == "-Infinity") lastXj = 0;
+    if (isNaN(lastYj) || lastYj == "NaN" || lastYj == "Infinity" || lastYj === "-Infinity") lastYj = 0;
     if (isNaN(zoom) || zoom == "NaN" || zoom == "Infinity" || zoom == "-Infinity") zoom = 1000;
     if (isNaN(max) || max == "NaN" || max == "Infinity" || max == "-Infinity") max = 1000;
     if (isNaN(res) || res == "NaN" || res == "Infinity" || res == "-Infinity" || res < 1) res = 1;
     if (isNaN(mode) || mode == "NaN" || mode == "Infinity" || mode == "-Infinity") mode = 1;
+    if (isNaN(power) || power == "NaN" || power == "Infinity" || power == "-Infinity") power = 2;
 
     localStorage.setItem("x0", x0);
     localStorage.setItem("y0", y0);
+    localStorage.setItem("xj", xj);
+    localStorage.setItem("yj", yj);
+    localStorage.setItem("lastXj", lastXj);
+    localStorage.setItem("lastYj", lastYj);
     localStorage.setItem("zoom", zoom);
     localStorage.setItem("max", max);
     localStorage.setItem("res", res);
     localStorage.setItem("mode", mode);
-
-    completeSegments = [];
+    localStorage.setItem("power", power);
+    localStorage.setItem("julia", julia);
 
     segmentQueue = [];
     for (let t = 0; t < nodes.length; t++) {
         segmentQueue.push([]);
     }
+
+    completeSegments = [];
 
     let n = 0;
 
@@ -172,6 +223,10 @@ function requestFractal() {
                     `&h=${yStep / zoom}` +
                     `&res=${res}` +
                     `&mode=${mode}` +
+                    `&power=${power}` +
+                    `&julia=${julia}` +
+                    `&xj=${xj}` +
+                    `&yj=${yj}` +
                     `&max=${Math.floor(max)}`,
                 image: new Image()
             };
@@ -226,10 +281,14 @@ function redraw() {
         context.fillStyle = 'white';
         context.textBaseline = 'middle';
         context.textAlign = 'center';
-        context.fillText("x = " + x0 + ", y = " + y0 + ", z = " + zoom + ", d = " + max + ", r = " + res + ", m = " + mode, w / 2, h - 175);
+        context.fillText("x = " + x0 + ", y = " + y0 + ", zoom = " + zoom + ", iterations = " + max +
+            (power > 2 ? (", power = " + power) : "") +
+            (julia ? (", juliaX " + xj + ", juliaY " + yj) : "") +
+            ", resolution = " + res + ", palette = " + mode, w / 2, h - 175);
     }
 
 }
+
 
 
 

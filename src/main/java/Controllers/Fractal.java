@@ -98,7 +98,7 @@ public class Fractal {
         if (y == null) y = -1.0;
         if (w == null) w = 2.0;
         if (h == null) h = 2.0;
-        if (xStep == null) xStep = 128;
+        if (xStep == null) xStep = 160;
         if (yStep == null) yStep = 120;
         if (mode == null) mode = 1;
         if (format == null) format = "jpg";

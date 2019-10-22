@@ -161,7 +161,7 @@ function processKey(event) {
             x0 = -0.5;
             y0 = 0;
             zoom = 750;
-            max = 1000;
+            max = 250;
             res = 1;
             mode = 1;
             power = 2;

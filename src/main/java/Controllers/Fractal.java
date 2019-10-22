@@ -78,7 +78,7 @@ public class Fractal {
 
     @GET
     @Path("generate")
-    @Produces({"image/png"})
+    @Produces({"image/png", "image/jpg"})
     public byte[] generateFractal(@QueryParam("x") Double x,
                                   @QueryParam("y") Double y,
                                   @QueryParam("w") Double w,
@@ -87,6 +87,7 @@ public class Fractal {
                                   @QueryParam("yStep") Integer yStep,
                                   @QueryParam("max") Integer maxDepth,
                                   @QueryParam("mode") Integer mode,
+                                  @QueryParam("format") String format,
                                   @QueryParam("power") Integer power,
                                   @QueryParam("julia") Boolean julia,
                                   @QueryParam("xj") Double xj,
@@ -100,6 +101,7 @@ public class Fractal {
         if (xStep == null) xStep = 128;
         if (yStep == null) yStep = 120;
         if (mode == null) mode = 1;
+        if (format == null) format = "jpg";
         if (power == null || power < 2) power = 2;
         if (maxDepth == null) maxDepth = 300;
         if (res == null) res = 1;
@@ -162,7 +164,7 @@ public class Fractal {
         ByteArrayOutputStream fractalStream = new ByteArrayOutputStream();
 
         try {
-            ImageIO.write(fractalBuffer, "png", fractalStream);
+            ImageIO.write(fractalBuffer, format, fractalStream);
         } catch (IOException e) {
             e.printStackTrace();
         }

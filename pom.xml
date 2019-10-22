@@ -14,8 +14,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>7</source>
-                    <target>7</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -69,11 +69,11 @@
             <version>2.28</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>com.sun.jersey.contribs</groupId>
             <artifactId>jersey-multipart</artifactId>
             <version>1.19.4</version>
-        </dependency>
+        </dependency>-->
 
         <!-- Jetty -->
 

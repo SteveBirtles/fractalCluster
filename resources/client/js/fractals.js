@@ -5,7 +5,7 @@ const xStep = 128, yStep = 120;
 let completeSegments = [];
 let zoom, max, x0, y0, xj, yj, lastXj, lastYj, res, format, power, julia = false;
 
-let nodes = ['http://10.0.0.1:8081', 'http://10.0.0.2:8081', 'http://10.0.0.3:8081', 'http://10.0.0.4:8081', 'http://10.0.0.5:8081', 'http://10.0.0.6:8081'];
+let nodes = ['http://10.0.0.1:8081', 'http://10.0.0.2:8081', 'http://10.0.0.3:8081', 'http://10.0.0.4:8081', 'http://10.0.0.5:8081', 'http://10.0.0.6:8081', 'http://10.0.0.7:8081'];
 
 let nodeThreads = 4;
 let segmentQueue = [];
@@ -101,12 +101,22 @@ function processKey(event) {
         }
 
         if (event.key === "ArrowLeft") {
-            max = Math.floor(max / 1.5);
+            max = Math.floor(max / 1.1);
             if (max < 1) max = 1;
             requestFractal();
         }
         if (event.key === "ArrowRight") {
-            max = Math.floor(max * 1.5);
+            max = Math.floor(max * 1.1);
+            requestFractal();
+        }
+
+        if (event.key === "[") {
+            max = Math.floor(max / 2);
+            if (max < 1) max = 1;
+            requestFractal();
+        }
+        if (event.key === "]") {
+            max = Math.floor(max * 2);
             requestFractal();
         }
 
@@ -196,7 +206,7 @@ function requestFractal() {
     if (isNaN(max) || max == "NaN" || max == "Infinity" || max == "-Infinity") max = 1000;
     if (isNaN(res) || res == "NaN" || res == "Infinity" || res == "-Infinity" || res < 1) res = 1;
     if (isNaN(mode) || mode == "NaN" || mode == "Infinity" || mode == "-Infinity") mode = 1;
-    if (format != "jpg" && format != "png" ) format = "jpg";
+    if (format != "jpg" && format != "png" ) format = "png";
     if (isNaN(power) || power == "NaN" || power == "Infinity" || power == "-Infinity") power = 2;
 
     localStorage.setItem("x0", x0);

@@ -1,13 +1,13 @@
 "use strict";
 
 const w = 1920, h = 1080;
-const xStep = 160, yStep = 120;
+const xStep = 320, yStep = 90;
 let completeSegments = [];
 let zoom, max, x0, y0, xj, yj, lastXj, lastYj, res, format, power, julia = false;
 
 let nodes = ['http://10.0.0.2:8081', 'http://10.0.0.3:8081', 'http://10.0.0.4:8081', 'http://10.0.0.5:8081', 'http://10.0.0.6:8081', 'http://10.0.0.7:8081'];
 
-//let nodeThreads = 4;
+let nodeThreads = 4;
 let segmentQueue = [];
 
 let keydown = false, hud = false, mode = 1;
@@ -229,13 +229,12 @@ function requestFractal() {
 
     completeSegments = [];
 
-    let n = 0;
-
     for (let i = 0; i < w; i += xStep) {
         for (let j = 0; j < h; j += yStep) {
     
             let x = x0 + (i - w / 2) / zoom;
             let y = y0 + (j - h / 2) / zoom;
+            let n = Math.floor(i / (w/nodes.length));
 
             let segment = {
                 x: i,
@@ -244,6 +243,8 @@ function requestFractal() {
                     `&y=${y}` +
                     `&w=${xStep / zoom}` +
                     `&h=${yStep / zoom}` +
+                    `&xStep=${xStep}` +
+                    `&yStep=${yStep}` +
                     `&res=${res}` +
                     `&mode=${mode}` +
                     `&format=${format}` +
@@ -258,14 +259,14 @@ function requestFractal() {
 
             segmentQueue[n].push(segment);
 
-            n = Math.floor(i / (w/nodes.length));
+            
 
         }
     }
 
     for (let n = 0; n < nodes.length; n++) {
-        //for (let t = 0; t < nodeThreads && segmentQueue[n].length > 0; t++) {
-        while (segmentQueue[n].length > 0) {
+        for (let t = 0; t < nodeThreads && segmentQueue[n].length > 0; t++) {
+        //while (segmentQueue[n].length > 0) {
             makeRequest(segmentQueue[n].shift());
         }
     }
@@ -278,43 +279,49 @@ function makeRequest(segment) {
     segment.image.onload = () => {
         completeSegments.push(segment);
         redraw();
-        //nextRequest(segment.n);
+        nextRequest(segment.n);
     };
 
 }
 
-//function nextRequest(n) {
-    //if (segmentQueue[n].length === 0) return;
-    //makeRequest(segmentQueue[n].pop());
-//}
+function nextRequest(n) {
+    if (segmentQueue[n].length === 0) return;
+    makeRequest(segmentQueue[n].shift());
+}
 
 function redraw() {
 
     const canvas = document.getElementById('fractalCanvas');
     const context = canvas.getContext('2d');
 
-    context.clearRect(0,0,w,h);
+    //context.clearRect(0,0,w,h);
 
     for (let s of completeSegments) {
         context.drawImage(s.image, s.x, s.y);
     }
 
     if (hud) {
-        context.fillStyle = 'black';
-        context.fillRect(0, h - 200, w, 50);
+        
         context.font = "24px Arial";
         context.textBaseline = 'middle';
         context.textAlign = 'center';
+        
         context.fillStyle = 'white'; 
         context.strokeStyle = 'white'; 
-        context.fillText("x = " + x0 + ", y = " + y0 + ", zoom = " + zoom + ", iterations = " + max +
-            (power > 2 ? (", power = " + power) : "") +
-            (julia ? (", juliaX " + xj + ", juliaY " + yj) : "") +
-            ", resolution = " + res + ", palette = " + mode + ", format = " + format, w / 2, h - 175);
         for (let s of completeSegments) {
             context.fillText((s.n+1), s.x + 20, s.y + 20);
             context.strokeRect(s.x, s.y, xStep, yStep);
         }
+        
+        context.fillStyle = 'black';
+        context.fillRect(0, h - 50, w, 50);
+        
+        context.fillStyle = 'white'; 
+        context.fillText("x = " + x0 + ", y = " + y0 + ", zoom = " + zoom + ", iterations = " + max +
+            (power > 2 ? (", power = " + power) : "") +
+            (julia ? (", juliaX " + xj + ", juliaY " + yj) : "") +
+            ", resolution = " + res + ", palette = " + mode + ", format = " + format, w / 2, h - 25);
+        
     }
 
 }

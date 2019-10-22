@@ -5,7 +5,7 @@ const xStep = 128, yStep = 120;
 let completeSegments = [];
 let zoom, max, x0, y0, xj, yj, lastXj, lastYj, res, power, julia = false;
 
-let nodes = ['localhost:8081'];
+let nodes = ['10.0.0.1:8081', '10.0.0.2:8081', '10.0.0.3:8081', '10.0.0.4:8081', '10.0.0.5:8081', '10.0.0.6:8081', '10.0.0.7:8081'];
 let nodeThreads = 6;
 let segmentQueue = [];
 
